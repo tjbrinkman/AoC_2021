@@ -51,22 +51,18 @@ with
 		where	b.height < m.height and m.height < 9
 	),
 	cte_basins as (		
-		-- per basin de omvang (unieke coordinaten) berekenen	  
-		select	basin_id, count(distinct x,y) as size
+		-- per basin: omvang (unieke coordinaten), sort by size desc, rank (rownum)
+		select	row_number() over (order by size desc) as rownum, 
+				basin_id, 
+				count(distinct x,y) as size
 		from 	cte_basin
 		group by basin_id
-	),
-	cte_basins_large as (
-		-- sorteer de basins, neemm de top-3 en geef ze een volgnummer (1=grootste)
-		select	row_number() over (order by size desc) as rownum, basin_id, size
-		from	cte_basins
 		order by size desc
 	)
 select	l1.size * l2.size * l3.size
-from 	cte_basins_large l1,
-		cte_basins_large l2,
-		cte_basins_large l3
+from 	cte_basins l1,
+		cte_basins l2,
+		cte_basins l3
 where	l1.rownum = 1
   and	l2.rownum = 2
-  and 	l3.rownum = 3		
-  	
+  and 	l3.rownum = 3	
